@@ -1,0 +1,243 @@
+USE dvdrental;
+
+Consulta 1:
+Propósito: Seleccionar el nombre y apellido de los actores.
+Resultado esperado: Una lista de nombres y apellidos de todos los actores.
+
+--1. Vamos a seleccionar el nombre y apellido de los actores
+ 
+SELECT first_name, last_name
+FROM dbo.actor;
+
+Consulta 2:
+Propósito: Mostrar el nombre completo del actor en una sola columna.
+Resultado esperado: Una columna llamada full_name que combina el nombre y apellido de cada actor.
+
+--2. Vamos a seleccionar el nombre completo del actor en una sola columna
+
+SELECT 
+    first_name + ' ' + last_name AS full_name
+FROM 
+    dbo.actor;
+	
+Consulta 3:
+Propósito: Encontrar actores cuyo nombre comienza con la letra "D".
+Resultado esperado: Una lista de actores cuyos nombres empiezan con "D".
+
+--3. Selecciona los actores que su nombre empieza con "D"
+
+SELECT 
+    first_name, last_name
+FROM 
+    dbo.actor
+WHERE 
+    first_name LIKE 'D%';
+	
+Consulta 4:
+Propósito: Identificar si hay actores con el mismo nombre.
+Resultado esperado: Una lista de nombres repetidos y cuántas veces aparecen.	
+
+--4. Â¿Tenemos algÃºn actor con el mismo nombre?
+
+SELECT 
+    first_name, 
+    COUNT(*) AS name_count
+FROM 
+    dbo.actor
+GROUP BY 
+    first_name
+HAVING 
+    COUNT(*) > 1;
+
+Consulta 5:
+Propósito: Determinar el costo máximo de alquiler de una película.
+Resultado esperado: Un valor numérico que representa el costo más alto de alquiler.	
+
+--5. Â¿CuÃ¡l es el costo mÃ¡ximo de renta de una pelÃ­cula?
+
+SELECT 
+    MAX(rental_rate) AS max_rental_rate
+FROM 
+    dbo.film;
+	
+Consulta 6:
+Propósito: Encontrar las películas que tienen el costo máximo de alquiler.
+Resultado esperado: Una lista de títulos de películas con el costo máximo de alquiler
+
+--6. Â¿CuÃ¡les son las peliculas que fueron rentadas con ese costo?	
+
+SELECT 
+    title, 
+    rental_rate
+FROM 
+    dbo.film
+WHERE 
+    rental_rate = 4.99;
+
+Consulta 7:
+Propósito: Contar cuántas películas hay para cada tipo de clasificación (rating).
+Resultado esperado: Una tabla que muestra el número de películas por clasificación (por ejemplo, PG, R, etc.).	
+
+--7. Â¿CuantÃ¡s pelÃ­culas hay por el tipo de audencia (rating)?
+
+SELECT 
+    rating, 
+    COUNT(*) AS movie_count
+FROM 
+    dbo.film
+GROUP BY 
+    rating;
+
+Consulta 8:
+Propósito: Seleccionar películas que no tienen una clasificación "R" o "NC-17".
+Resultado esperado: Una lista de títulos de películas con clasificaciones diferentes a "R" y "NC-17".	
+
+
+--8. Selecciona las pelÃ­culas que no tienen un rating R o NC-17
+
+SELECT 
+    title, 
+    rating
+FROM 
+    dbo.film
+WHERE 
+    rating NOT IN ('R', 'NC-17');
+	
+Consulta 9:
+Propósito: Contar cuántos clientes hay en cada tienda.
+Resultado esperado: Una tabla que muestra el número de clientes por tienda.	
+	
+--9. Â¿Cuantos clientes hay en cada tienda?
+
+SELECT 
+    store_id, 
+    COUNT(*) AS customer_count
+FROM 
+    dbo.customer
+GROUP BY 
+    store_id;
+
+Consulta 10:
+Propósito: Identificar la película que más veces se ha rentado.
+Resultado esperado: El título de la película más rentada y el número de veces que se ha rentado.
+
+--10. Â¿CuÃ¡l es la pelicula que mas veces se rento?
+
+SELECT TOP 1
+    f.title,
+    COUNT(*) AS rental_count
+FROM
+    dbo.rental r
+JOIN
+    dbo.inventory i ON r.inventory_id = i.inventory_id
+JOIN
+    dbo.film f ON i.film_id = f.film_id
+GROUP BY
+    f.title
+ORDER BY
+    rental_count DESC;
+
+Consulta 11:
+Propósito: Encontrar películas que nunca se han rentado.
+Resultado esperado: Una lista de películas que no tienen registros de alquiler.
+
+--11. Â¿QuÃ© peliculas no se han rentado?
+
+SELECT 
+    f.film_id,
+    f.title
+FROM 
+    dbo.film f
+LEFT JOIN 
+    dbo.inventory i ON f.film_id = i.film_id
+LEFT JOIN 
+    dbo.rental r ON i.inventory_id = r.inventory_id
+WHERE 
+    r.rental_id IS NULL;
+
+Consulta 12:
+Propósito: Identificar clientes que nunca han rentado una película.
+Resultado esperado: Según el comentario, no hay clientes que no hayan rentado películas.	
+	
+--12. Â¿QuÃ© clientes no han rentado ninguna pelÃ­cula?
+
+SELECT 
+    c.customer_id,
+    c.first_name,
+    c.last_name
+FROM 
+    dbo.customer c
+LEFT JOIN 
+    dbo.rental r ON c.customer_id = r.customer_id
+WHERE 
+    r.rental_id IS NULL;
+
+	-- No hay clientes que no hayan rentado
+
+Consulta 13:
+Propósito: Encontrar actores que han actuado en más de 30 películas.
+Resultado esperado: Una lista de actores y el número de películas en las que han participado, filtrando aquellos con más de 30 películas.
+	
+--13. Â¿QuÃ© actores han actuado en mÃ¡s de 30 pelÃ­culas?
+
+SELECT 
+    a.actor_id,
+    a.first_name,
+    a.last_name,
+    COUNT(fa.film_id) AS film_count
+FROM 
+    dbo.actor a
+JOIN 
+    dbo.film_actor fa ON a.actor_id = fa.actor_id
+GROUP BY 
+    a.actor_id, a.first_name, a.last_name
+HAVING 
+    COUNT(fa.film_id) > 30
+ORDER BY 
+    film_count DESC;
+	
+Consulta 14:
+Propósito: Calcular las ventas totales por tienda.
+Resultado esperado: Una tabla que muestra el total de ventas por tienda.	
+
+--14. Muestra las ventas totales por tienda
+
+SELECT 
+    s.store_id,
+    SUM(CAST(p.amount AS DECIMAL(10, 2))) AS total_sales
+FROM 
+    dbo.store s
+JOIN 
+    dbo.customer c ON s.store_id = c.store_id
+JOIN 
+    dbo.payment p ON c.customer_id = p.customer_id
+GROUP BY 
+    s.store_id
+ORDER BY 
+    total_sales DESC;
+
+Consulta 15:
+Propósito: Identificar clientes que han rentado la misma película más de una vez.
+Resultado esperado: Una lista de clientes, las películas que rentaron más de una vez y el número de veces que las rentaron.	
+
+--15. Muestra los clientes que rentaron una pelicula mÃ¡s de una vez
+SELECT 
+    c.customer_id,
+    c.first_name,
+    c.last_name,
+    f.title AS film_title,
+    COUNT(r.rental_id) AS rental_count
+FROM 
+    dbo.rental r
+JOIN 
+    dbo.inventory i ON r.inventory_id = i.inventory_id
+JOIN 
+    dbo.film f ON i.film_id = f.film_id
+JOIN 
+    dbo.customer c ON r.customer_id = c.customer_id
+GROUP BY 
+    c.customer_id, c.first_name, c.last_name, f.title
+HAVING 
+    COUNT(r.rental_id) > 1
+ORDER BY 
+    rental_count DESC;
